@@ -30,11 +30,11 @@ PORTER_MODELS = {
     "porter2": {
         "id": "1901", 
         "name": "현대 포터2",
-        "lineup_ids": None  # None이면 모든 라인업 크롤링
+        "lineup_ids": [53552, 53553, 53554, 53555, 53556]
     },
     "porter2_ev": {
         "id": "4399", 
         "name": "현대 포터2 일렉트릭",
-        "lineup_ids": None
+        "lineup_ids": [53555, 53627]
     },
 }
