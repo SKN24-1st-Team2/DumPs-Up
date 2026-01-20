@@ -46,6 +46,7 @@ def _car_records():
                         "hw_efc": float(r.get("hw_efc", 0)) if r.get("hw_efc") is not None else 0.0,
                         "max_dist": int(r.get("max_dist", 0)) if r.get("max_dist") is not None else 0,
                         "price": int(r.get("price", 0)) if r.get("price") is not None else 0,
+                        "maintenance_cost": int(r.get("maintenance_cost", 0)) if r.get("maintenance_cost") is not None else 0,
                         "image": r.get("image"),
                     })
                 return records
@@ -56,7 +57,7 @@ def _car_records():
     rows = get_dummy_car_info_data()
     records = []
     for r in rows:
-        fuel_type, name, maker, size, capacity, h_power, max_fuel, cx_efc, ct_efc, hw_efc, max_dist, price, image = r
+        fuel_type, name, maker, size, capacity, h_power, max_fuel, cx_efc, ct_efc, hw_efc, max_dist, price, maintenance_cost, image = r
         records.append(
             {
                 "fuel_type": fuel_type,
@@ -71,6 +72,7 @@ def _car_records():
                 "hw_efc": float(hw_efc) if hw_efc is not None else 0.0,
                 "max_dist": int(max_dist) if max_dist is not None else 0,
                 "price": int(price) if price is not None else 0,
+                "maintenance_cost": int(maintenance_cost) if maintenance_cost is not None else 0,
                 "image": image,
             }
         )
@@ -127,7 +129,15 @@ def _get_car_record(records, car_name):
 
 
 def _render_compare_card(*, key, title, subtitle, car_options, selected_name):
-    selected = next((c for c in car_options if c.get("name") == selected_name), None) if car_options else None
+    select_key = f"{key}_model_select"
+    options = [c["name"] for c in car_options] if car_options else ["(데이터 없음)"]
+    
+    if select_key in st.session_state and st.session_state[select_key] in options:
+        current_name = st.session_state[select_key]
+    else:
+        current_name = selected_name
+    
+    selected = next((c for c in car_options if c.get("name") == current_name), None) if car_options else None
     if not selected and car_options:
         selected = car_options[0]
 
@@ -159,32 +169,30 @@ def _render_compare_card(*, key, title, subtitle, car_options, selected_name):
             )
 
         with right:
-            options = [c["name"] for c in car_options] if car_options else ["(데이터 없음)"]
             idx = options.index(selected["name"]) if selected and selected.get("name") in options else 0
 
             picked = st.selectbox(
                 "모델",
                 options,
                 index=idx,
-                key=f"{key}_model_select",
+                key=select_key,
                 label_visibility="collapsed",
             )
 
-            picked_rec = next((c for c in car_options if c["name"] == picked), None)
-            price_text = _format_price_krw(picked_rec["price"]) if picked_rec else "-"
-            fuel_text = picked_rec["fuel_type"] if picked_rec else "-"
+            price_text = _format_price_krw(selected["price"]) if selected else "-"
+            fuel_text = selected["fuel_type"] if selected else "-"
 
             st.markdown(
                 f"""
                 <div class="compare-meta">
-                  <div class="compare-meta-title">{picked}</div>
+                  <div class="compare-meta-title">{selected["name"] if selected else "-"}</div>
                   <div class="compare-meta-sub">{fuel_text} · {price_text}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
-    return picked
+    return picked  # selectbox 현재 값 반환
 
 
 def _render_detail_page(records, model_a_name, model_b_name):
